@@ -24,8 +24,8 @@ def main(page: ft.Page):
 
     # function to add a task when button is clicked
     def add_task(e):
-        task_text = task_input.value # get input text
-        if task_text.strip(): # check if text is not empty
+        task_text = task_input.value.strip() # get input text
+        if task_text: # check if text is not empty
             # function to delete task when button is clicked
             def delete_task(e):
                 task_list.controls.remove(task_row)
@@ -36,12 +36,12 @@ def main(page: ft.Page):
 
             # wrap task label in text widget to allow wrapping
             task_label = ft.Text(task_text, no_wrap=False, expand=True)
-            task_content = ft.Row([task_checkbox, task_label], expand=True)
 
             # organize elements into a row. align checkbox to the left and delete button to the right
             task_row = ft.Row(
                 [
-                    task_content,
+                    task_checkbox,
+                    task_label,
                     delete_button
                 ],
                 alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
@@ -59,7 +59,7 @@ def main(page: ft.Page):
     # header centered at top of screen
     header = ft.Container(
         content=ft.Row(
-            [ft.Text("Task Master", size=24, weight=ft.FontWeight.BOLD)],
+            [ft.Text("To-Do List", size=24, weight=ft.FontWeight.BOLD)],
             alignment=ft.MainAxisAlignment.CENTER, # aligns header to center of screen
         ),
         padding=ft.padding.only(bottom=25) # added padding below header
