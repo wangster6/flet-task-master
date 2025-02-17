@@ -11,7 +11,14 @@ def main(page: ft.Page):
 
     # function to handle checkbox changes
     def toggle_task(e):
-        page.update() # refresh the UI
+        checkbox = e.control # get checkbox that triggered the event
+
+        if checkbox.value: # if checkbox is checked
+            checkbox.label_style = ft.TextStyle(decoration=ft.TextDecoration.LINE_THROUGH)
+        else:
+            checkbox.label_style = ft.TextStyle(decoration=ft.TextDecoration.NONE)
+
+        checkbox.update() # refresh the checkbox UI
 
     # function to add a task when button is clicked
     def add_task(e):
@@ -20,7 +27,7 @@ def main(page: ft.Page):
             task_checkbox = ft.Checkbox(label=task_text, on_change=toggle_task) # create checkbox for task
             task_list.controls.append(task_checkbox) # add task to list
             task_input.value = "" # clear input field
-            page.update() # refresh the UI
+            page.update() # refresh the page UI
     
     # button that triggers add_task function when clicked
     add_button = ft.ElevatedButton("Add Task", on_click=add_task)
