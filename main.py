@@ -1,4 +1,16 @@
 import flet as ft
+import os
+from supabase import create_client, Client
+from dotenv import load_dotenv
+
+# load environment variables
+load_dotenv()
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+
+# initialize supabase client
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
 
 def main(page: ft.Page):
     page.title = "Flet Task Master"
@@ -12,46 +24,99 @@ def main(page: ft.Page):
     task_list = ft.Column(scroll=ft.ScrollMode.AUTO) # makes the task list scrollable
 
     # function to handle checkbox changes
-    def toggle_task(e):
+    def toggle_task(e, task_label, task_id):
         checkbox = e.control # get checkbox that triggered the event
+        is_completed = checkbox.value
 
-        if checkbox.value: # if checkbox is checked
-            checkbox.label_style = ft.TextStyle(decoration=ft.TextDecoration.LINE_THROUGH)
-        else:
-            checkbox.label_style = ft.TextStyle(decoration=ft.TextDecoration.NONE)
+        supabase.table("tasks").update({"completed": is_completed}).eq("id", task_id).execute()
 
-        checkbox.update() # refresh the checkbox UI
+        task_label.style = ft.TextStyle(decoration=ft.TextDecoration.LINE_THROUGH) if is_completed else ft.TextStyle(decoration=ft.TextDecoration.NONE)
+        task_label.update() # refresh the checkbox UI
 
-    # function to add a task when button is clicked
-    def add_task(e):
-        task_text = task_input.value.strip() # get input text
-        if task_text: # check if text is not empty
-            # function to delete task when button is clicked
-            def delete_task(e):
+    def load_tasks():
+        task_list.controls.clear()
+        response = supabase.table("tasks").select("*").execute()
+
+        for task in response.data:
+            task_id = task["id"]
+            task_text = task["text"]
+            task_is_completed = task["completed"]
+
+            def delete_task(e, task_id, task_row):
+                supabase.table("tasks").delete().eq("id", task_id).execute()
                 task_list.controls.remove(task_row)
                 page.update()
-
-            task_checkbox = ft.Checkbox(on_change=toggle_task) # create checkbox for task
-            delete_button = ft.IconButton(icon=ft.icons.DELETE, on_click=delete_task) # create delete button for task
-
-            # wrap task label in text widget to allow wrapping
+            
             task_label = ft.Text(task_text, no_wrap=False, expand=True)
+            task_checkbox = ft.Checkbox(
+                on_change=lambda e, task_label=task_label, task_id=task_id: toggle_task(e, task_label, task_id),
+                value=bool(task_is_completed),
+                data=task_id
+            )
 
-            # organize elements into a row. align checkbox to the left and delete button to the right
             task_row = ft.Row(
                 [
                     task_checkbox,
-                    task_label,
-                    delete_button
+                    task_label
                 ],
                 alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
                 expand=True
             )
 
+            delete_button = ft.IconButton(
+                icon=ft.icons.DELETE,
+                on_click=lambda e, task_id=task_id, task_row=task_row: delete_task(e, task_id, task_row)
+            ) # create delete button for task
+
+            task_row.controls.append(delete_button)
+
+            task_list.controls.append(task_row)
+        page.update()
+
+    # function to add a task when button is clicked
+    def add_task(e):
+        task_text = task_input.value.strip() # get input text
+        if task_text: # check if text is not empty
+            response = supabase.table("tasks").insert({"text": task_text, "completed": False}).execute()
+            task_id = response.data[0]["id"]
+
+            # function to delete task when button is clicked
+            def delete_task(e, task_id, task_row):
+                supabase.table("tasks").delete().eq("id", task_id).execute()
+                task_list.controls.remove(task_row)
+                page.update()
+
+            # wrap task label in text widget to allow wrapping
+            task_label = ft.Text(task_text, no_wrap=False, expand=True)
+
+            task_checkbox = ft.Checkbox(
+                on_change=lambda e, task_label=task_label, task_id=task_id: toggle_task(e, task_label=task_label, task_id=task_id),
+                data=task_id
+            ) # create checkbox for task
+
+            # organize elements into a row. align checkbox to the left and delete button to the right
+            task_row = ft.Row(
+                [
+                    task_checkbox,
+                    task_label
+                ],
+                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                expand=True
+            )
+
+            delete_button = ft.IconButton(
+                icon=ft.icons.DELETE,
+                on_click=lambda e, task_id=task_id, task_row=task_row: delete_task(e, task_id, task_row)
+            ) # create delete button for task
+
+            task_row.controls.append(delete_button)
+
             task_list.controls.append(task_row) # add task to list
             task_input.value = "" # clear input field
             page.update() # refresh the page UI
     
+    load_tasks() #load tasks on app startup
+
     # button that triggers add_task function when clicked
     add_button = ft.ElevatedButton("Add Task", on_click=add_task)
     
