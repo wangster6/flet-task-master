@@ -124,7 +124,7 @@ def main(page: ft.Page):
     # header centered at top of screen
     header = ft.Container(
         content=ft.Row(
-            [ft.Text("To-Do List", size=24, weight=ft.FontWeight.BOLD)],
+            [ft.Text("To Do", size=24, weight=ft.FontWeight.BOLD)],
             alignment=ft.MainAxisAlignment.CENTER, # aligns header to center of screen
         ),
         padding=ft.padding.only(bottom=25) # added padding below header
