@@ -68,7 +68,7 @@
 
 🔲 Write clear documentation for setting up the project.
 
-🔲 Record a demo video for your portfolio.
+🔲 Record a demo video for portfolio.
 
 ---
 
