@@ -1,5 +1,6 @@
 import flet as ft
 import os
+import threading
 from supabase import create_client, Client
 from dotenv import load_dotenv
 
@@ -82,6 +83,9 @@ def main(page: ft.Page):
         page.open(banner) # open the banner
         page.update()
 
+        # Automatically close banner after 2 seconds
+        threading.Timer(2, lambda: close_banner(banner)).start()
+
     def close_banner(banner):
         page.close(banner)
         page.update()
@@ -89,7 +93,7 @@ def main(page: ft.Page):
     # defining the banner
     task_already_exists_warning = ft.Banner(
         bgcolor=ft.Colors.RED_400,
-        leading=ft.Icon(ft.Icons.WARNING, color=ft.colors.WHITE, size=40),
+        leading=ft.Icon(ft.Icons.WARNING, color=ft.colors.WHITE, size=15),
         content=ft.Text("Task already exists!", color=ft.colors.WHITE),  # Content will be updated dynamically
         actions=[
             ft.TextButton(text="Close",
@@ -97,12 +101,23 @@ def main(page: ft.Page):
                           style=ft.ButtonStyle(color=ft.colors.WHITE))
         ],
     )
+
+    empty_task_warning = ft.Banner(
+        bgcolor=ft.Colors.RED_400,
+        leading=ft.Icon(ft.Icons.WARNING, color=ft.colors.WHITE, size=15),
+        content=ft.Text("Cannot add an empty task!", color=ft.colors.WHITE),  # Content will be updated dynamically
+        actions=[
+            ft.TextButton(text="Close",
+                          on_click=lambda e: close_banner(empty_task_warning),
+                          style=ft.ButtonStyle(color=ft.colors.WHITE))
+        ],
+    )
+
     # function to add a task when button is clicked
     def add_task(e):
         task_text = task_input.value.strip() # get input text
         if not task_text:
-            page.open(ft.SnackBar(ft.Text("Cannot add an empty task!"), bgcolor="green"))
-            page.update()
+            show_banner(empty_task_warning)
             return # exit function if input is empty
         
         # check if task already exists in Supabase
