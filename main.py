@@ -16,6 +16,10 @@ def main(page: ft.Page):
     page.title = "Flet Task Master"
     page.vertical_alignment = ft.MainAxisAlignment.SPACE_BETWEEN
     page.padding = ft.padding.all(25)
+
+    # close any open banners on app startup
+    page.banner = None
+    page.update()
     
     # input field for users to type in their task
     task_input = ft.TextField(label="Enter a task", expand=True)
@@ -73,9 +77,40 @@ def main(page: ft.Page):
             task_list.controls.append(task_row)
         page.update()
 
+    def show_banner(banner):
+        page.banner = banner
+        page.open(banner) # open the banner
+        page.update()
+
+    def close_banner(banner):
+        page.close(banner)
+        page.update()
+
+    # defining the banner
+    task_already_exists_warning = ft.Banner(
+        bgcolor=ft.Colors.RED_400,
+        leading=ft.Icon(ft.Icons.WARNING, color=ft.colors.WHITE, size=40),
+        content=ft.Text("Task already exists!", color=ft.colors.WHITE),  # Content will be updated dynamically
+        actions=[
+            ft.TextButton(text="Close",
+                          on_click=lambda e: close_banner(task_already_exists_warning),
+                          style=ft.ButtonStyle(color=ft.colors.WHITE))
+        ],
+    )
     # function to add a task when button is clicked
     def add_task(e):
         task_text = task_input.value.strip() # get input text
+        if not task_text:
+            page.open(ft.SnackBar(ft.Text("Cannot add an empty task!"), bgcolor="green"))
+            page.update()
+            return # exit function if input is empty
+        
+        # check if task already exists in Supabase
+        response = supabase.table("tasks").select("id").eq("text", task_text).execute()
+        if response.data:
+            show_banner(task_already_exists_warning)
+            return # exit function without adding duplicate task
+
         if task_text: # check if text is not empty
             response = supabase.table("tasks").insert({"text": task_text, "completed": False}).execute()
             task_id = response.data[0]["id"]
