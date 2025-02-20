@@ -44,7 +44,7 @@
 
 ✅ Prevent duplicate task entries (if user adds the same task multiple times).
 
-🔲 Implement error handling to handle network issues or API failures.
+✅ Implement error handling to handle network issues or API failures.
 
 ### 6️⃣ Deployment
 
