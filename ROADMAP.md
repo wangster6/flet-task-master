@@ -42,7 +42,7 @@
 
 ### 5️⃣ Database Optimization
 
-🔲 Prevent duplicate task entries (if user adds the same task multiple times).
+✅ Prevent duplicate task entries (if user adds the same task multiple times).
 
 🔲 Implement error handling to handle network issues or API failures.
 

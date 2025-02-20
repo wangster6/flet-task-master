@@ -28,68 +28,6 @@ def main(page: ft.Page):
     # column to hold all tasks
     task_list = ft.Column(scroll=ft.ScrollMode.AUTO) # makes the task list scrollable
 
-    # function to handle checkbox changes
-    def toggle_task(e, task_label, task_id):
-        checkbox = e.control # get checkbox that triggered the event
-        is_completed = checkbox.value
-
-        supabase.table("tasks").update({"completed": is_completed}).eq("id", task_id).execute()
-
-        task_label.style = ft.TextStyle(decoration=ft.TextDecoration.LINE_THROUGH) if is_completed else ft.TextStyle(decoration=ft.TextDecoration.NONE)
-        task_label.update() # refresh the checkbox UI
-
-    def load_tasks():
-        task_list.controls.clear()
-        response = supabase.table("tasks").select("*").execute()
-
-        for task in response.data:
-            task_id = task["id"]
-            task_text = task["text"]
-            task_is_completed = task["completed"]
-
-            def delete_task(e, task_id, task_row):
-                supabase.table("tasks").delete().eq("id", task_id).execute()
-                task_list.controls.remove(task_row)
-                page.update()
-            
-            task_label = ft.Text(task_text, no_wrap=False, expand=True)
-            task_checkbox = ft.Checkbox(
-                on_change=lambda e, task_label=task_label, task_id=task_id: toggle_task(e, task_label, task_id),
-                value=bool(task_is_completed),
-                data=task_id
-            )
-
-            task_row = ft.Row(
-                [
-                    task_checkbox,
-                    task_label
-                ],
-                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-                expand=True
-            )
-
-            delete_button = ft.IconButton(
-                icon=ft.icons.DELETE,
-                on_click=lambda e, task_id=task_id, task_row=task_row: delete_task(e, task_id, task_row)
-            ) # create delete button for task
-
-            task_row.controls.append(delete_button)
-
-            task_list.controls.append(task_row)
-        page.update()
-
-    def show_banner(banner):
-        page.banner = banner
-        page.open(banner) # open the banner
-        page.update()
-
-        # Automatically close banner after 2 seconds
-        threading.Timer(2, lambda: close_banner(banner)).start()
-
-    def close_banner(banner):
-        page.close(banner)
-        page.update()
-
     # defining the banner
     task_already_exists_warning = ft.Banner(
         bgcolor=ft.Colors.RED_400,
@@ -113,6 +51,90 @@ def main(page: ft.Page):
         ],
     )
 
+    error_warning = ft.Banner(
+        bgcolor=ft.Colors.RED_400,
+        leading=ft.Icon(ft.Icons.ERROR, color=ft.colors.WHITE, size=15),
+        content=ft.Text("An error occurred. Please try again later.", color=ft.colors.WHITE),  
+        actions=[
+            ft.TextButton(text="Close",
+                        on_click=lambda e: close_banner(error_warning),
+                        style=ft.ButtonStyle(color=ft.colors.WHITE))
+        ],
+    )
+
+    def show_banner(banner):
+        page.banner = banner
+        page.open(banner) # open the banner
+        page.update()
+
+        # Automatically close banner after 2 seconds
+        threading.Timer(2, lambda: close_banner(banner)).start()
+
+    def close_banner(banner):
+        page.close(banner)
+        page.update()
+
+    # function to handle checkbox changes
+    def toggle_task(e, task_label, task_id):
+        checkbox = e.control # get checkbox that triggered the event
+        is_completed = checkbox.value
+
+        try:
+            supabase.table("tasks").update({"completed": is_completed}).eq("id", task_id).execute()
+            task_label.style = ft.TextStyle(decoration=ft.TextDecoration.LINE_THROUGH) if is_completed else ft.TextStyle(decoration=ft.TextDecoration.NONE)
+            task_label.update() # refresh the checkbox UI
+        except Exception as ex:
+            print("Erorr updating task status:", ex)
+            show_banner(error_warning)
+
+    def load_tasks():
+        task_list.controls.clear()
+        try:
+            response = supabase.table("tasks").select("*").execute()
+
+            for task in response.data:
+                task_id = task["id"]
+                task_text = task["text"]
+                task_is_completed = task["completed"]
+
+                def delete_task(e, task_id, task_row):
+                    try:
+                        supabase.table("tasks").delete().eq("id", task_id).execute()
+                        task_list.controls.remove(task_row)
+                        page.update()
+                    except Exception as ex:
+                        print("Error deleting task:", ex)
+                        show_banner(error_warning)
+                    
+                task_label = ft.Text(task_text, no_wrap=False, expand=True)
+                task_checkbox = ft.Checkbox(
+                    on_change=lambda e, task_label=task_label, task_id=task_id: toggle_task(e, task_label, task_id),
+                    value=bool(task_is_completed),
+                    data=task_id
+                )
+
+                task_row = ft.Row(
+                    [
+                        task_checkbox,
+                        task_label
+                    ],
+                    alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                    expand=True
+                )
+
+                delete_button = ft.IconButton(
+                    icon=ft.icons.DELETE,
+                    on_click=lambda e, task_id=task_id, task_row=task_row: delete_task(e, task_id, task_row)
+                ) # create delete button for task
+
+                task_row.controls.append(delete_button)
+
+                task_list.controls.append(task_row)
+            page.update()
+        except Exception as ex:
+            print("Error loading tasks:", ex)
+            show_banner(error_warning)
+
     # function to add a task when button is clicked
     def add_task(e):
         task_text = task_input.value.strip() # get input text
@@ -121,10 +143,15 @@ def main(page: ft.Page):
             return # exit function if input is empty
         
         # check if task already exists in Supabase
-        response = supabase.table("tasks").select("id").eq("text", task_text).execute()
-        if response.data:
-            show_banner(task_already_exists_warning)
-            return # exit function without adding duplicate task
+        try:
+            response = supabase.table("tasks").select("id").eq("text", task_text).execute()
+            if response.data:
+                show_banner(task_already_exists_warning)
+                return # exit function without adding duplicate task
+        except Exception as ex:
+            print("Error checking for existing task:", ex)
+            show_banner(error_warning)
+            return
 
         if task_text: # check if text is not empty
             response = supabase.table("tasks").insert({"text": task_text, "completed": False}).execute()
@@ -132,10 +159,14 @@ def main(page: ft.Page):
 
             # function to delete task when button is clicked
             def delete_task(e, task_id, task_row):
-                supabase.table("tasks").delete().eq("id", task_id).execute()
-                task_list.controls.remove(task_row)
-                page.update()
-
+                try:
+                    supabase.table("tasks").delete().eq("id", task_id).execute()
+                    task_list.controls.remove(task_row)
+                    page.update()
+                except Exception as ex:
+                    print("Error deleting task:", ex)
+                    show_banner(error_warning)
+                
             # wrap task label in text widget to allow wrapping
             task_label = ft.Text(task_text, no_wrap=False, expand=True)
 
