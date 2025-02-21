@@ -46,6 +46,8 @@
 
 ✅ Implement error handling to handle network issues or API failures.
 
+🔲 Optimize Database Queries for Performance (Indexing)
+
 ### 6️⃣ Deployment
 
 🔲 Deploy the Flet app to a web server so hiring managers can access it via a URL.
