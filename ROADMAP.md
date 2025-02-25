@@ -54,9 +54,17 @@
 
 ✅ Configured tmux to keep the app running persistently, even after SSH disconnects.
 
-🔲 Set up a custom domain name for the web app.
+✅ Installed and configured Nginx as a reverse proxy for the Flet web app.
 
-🔲 Ensure Supabase credentials are securely stored in production (e.g., move .env file outside the repo, use IAM roles, etc.).
+✅ Set up a custom domain name (flettaskmaster.publicvm.com) for the web app.
+
+✅ Configured DNS records to point the domain to the EC2 instance.
+
+✅ Obtained and installed an SSL certificate using Let's Encrypt (certbot).
+
+✅ Enabled HTTPS and forced HTTPS redirection for the domain in Nginx.
+
+🔲 Ensure Supabase credentials are securely stored in production (e.g., move .env file outside the repo, use AWS SSM Parameter Store/IAM roles).
 
 ### 7️⃣ UI Improvements & Features
 
