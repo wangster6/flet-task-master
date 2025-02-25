@@ -42,19 +42,21 @@
 
 ### 5️⃣ Database Optimization
 
-✅ Prevent duplicate task entries (if user adds the same task multiple times).
+✅ Prevented duplicate task entries (if user adds the same task multiple times).
 
-✅ Implement error handling to handle network issues or API failures.
+✅ Implemented error handling to handle network issues or API failures.
 
-🔲 Optimize Database Queries for Performance (Indexing)
+🔲 Optimized Database Queries for Performance (Indexing)
 
 ### 6️⃣ Deployment
 
-🔲 Deploy the Flet app to a web server so hiring managers can access it via a URL.
+✅ Deployed the Flet app on an AWS EC2 instance.
 
-🔲 Choose a deployment service (Railway, Fly.io, Render, or a VPS).
+✅ Configured tmux to keep the app running persistently, even after SSH disconnects.
 
-🔲 Ensure Supabase credentials are stored securely in production.
+🔲 Set up a custom domain name for the web app.
+
+🔲 Ensure Supabase credentials are securely stored in production (e.g., move .env file outside the repo, use IAM roles, etc.).
 
 ### 7️⃣ UI Improvements & Features
 
