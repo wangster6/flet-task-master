@@ -1,13 +1,18 @@
 import flet as ft
-import os
 import threading
+import boto3
+import json
 from supabase import create_client, Client
-from dotenv import load_dotenv
 
-# load environment variables
-load_dotenv()
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+def get_ssm_parameter(name, with_decryption=True):
+    """Retrieve a parameter from AWS SSM Parameter Store."""
+    ssm = boto3.client('ssm', region_name="us-east-1")  # Change to your region
+    response = ssm.get_parameter(Name=name, WithDecryption=with_decryption)
+    return response['Parameter']['Value']
+
+# Fetch secrets from AWS SSM Parameter Store
+SUPABASE_URL = get_ssm_parameter("/flettaskmaster/supabase-url", with_decryption=True)
+SUPABASE_KEY = get_ssm_parameter("/flettaskmaster/supabase-key", with_decryption=True)
 
 # initialize supabase client
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
