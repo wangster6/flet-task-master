@@ -64,7 +64,7 @@
 
 ✅ Enabled HTTPS and forced HTTPS redirection for the domain in Nginx.
 
-🔲 Ensure Supabase credentials are securely stored in production (e.g., move .env file outside the repo, use AWS SSM Parameter Store/IAM roles).
+✅ Ensure Supabase credentials are securely stored in production (e.g., move .env file outside the repo, use AWS SSM Parameter Store/IAM roles).
 
 ### 7️⃣ UI Improvements & Features
 
