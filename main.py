@@ -118,7 +118,13 @@ def main(page: ft.Page):
         task_label = ft.Text(task_text, no_wrap=False, expand=True)
 
         # edit text field (hidden by default)
-        text_field = ft.TextField(value=task_text, expand=True, visible=False)
+        text_field = ft.TextField(
+            value=task_text,
+            expand=True,
+            visible=False,
+            autofocus=True,
+            adaptive=True
+        )
 
         # function to update task text in database
         def update_task(e):
