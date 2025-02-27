@@ -157,12 +157,6 @@ def main(page: ft.Page):
             text_field.focus()
             page.update()
 
-            if is_mobile:
-                time.sleep(0.1)
-                text_field.focus()
-            
-            page.update()
-
         # function to cancel editing
         def cancel_edit(e):
             task_label.visible = True # show task label
