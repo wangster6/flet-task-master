@@ -5,33 +5,33 @@ from supabase import create_client, Client
 # ==================================================================== #
 # FOR DEPLOYMENT
 
-# IMPORTS
-import boto3
-import json
+# # IMPORTS
+# import boto3
+# import json
 
-# GET SUPABASE SECRETS FROM AWS SSM. USED IN OFFICIAL DEPLOYMENT
-def get_ssm_parameter(name, with_decryption=True):
-    """Retrieve a parameter from AWS SSM Parameter Store."""
-    ssm = boto3.client('ssm', region_name="us-east-1")  # Change to your region
-    response = ssm.get_parameter(Name=name, WithDecryption=with_decryption)
-    return response['Parameter']['Value']
+# # GET SUPABASE SECRETS FROM AWS SSM. USED IN OFFICIAL DEPLOYMENT
+# def get_ssm_parameter(name, with_decryption=True):
+#     """Retrieve a parameter from AWS SSM Parameter Store."""
+#     ssm = boto3.client('ssm', region_name="us-east-1")  # Change to your region
+#     response = ssm.get_parameter(Name=name, WithDecryption=with_decryption)
+#     return response['Parameter']['Value']
 
-# FETCH SECRETS FROM AWS SSM PARAMETER STORE
-SUPABASE_URL = get_ssm_parameter("/flettaskmaster/supabase-url", with_decryption=True)
-SUPABASE_KEY = get_ssm_parameter("/flettaskmaster/supabase-key", with_decryption=True)
+# # FETCH SECRETS FROM AWS SSM PARAMETER STORE
+# SUPABASE_URL = get_ssm_parameter("/flettaskmaster/supabase-url", with_decryption=True)
+# SUPABASE_KEY = get_ssm_parameter("/flettaskmaster/supabase-key", with_decryption=True)
 # ==================================================================== #
 # FOR TESTING
 
-# # IMPORTS FOR TESTING
-# import os
-# from dotenv import load_dotenv
+# IMPORTS FOR TESTING
+import os
+from dotenv import load_dotenv
 
-# # LOAD ENVIRONMENT VARIABLES
-# load_dotenv()
+# LOAD ENVIRONMENT VARIABLES
+load_dotenv()
 
-# # GET SUPABASE SECRETS FROM ENV FILE
-# SUPABASE_URL = os.getenv("SUPABASE_URL")
-# SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+# GET SUPABASE SECRETS FROM ENV FILE
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 # ==================================================================== #
 
 # initialize supabase client
@@ -39,13 +39,26 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 def main(page: ft.Page):
     page.title = "Flet Task Master"
-    page.vertical_alignment = ft.MainAxisAlignment.SPACE_BETWEEN
+    page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
+    page.window.width = 100
     page.padding = ft.padding.all(25)
 
     # close any open banners on app startup
     page.banner = None
     page.update()
     
+    # check if accessing from desktop platform
+    is_desktop = page.platform in [ft.PagePlatform.LINUX, ft.PagePlatform.WINDOWS, ft.PagePlatform.MACOS]
+    print("PAGE PLATFORM:", page.platform)
+
+    # main app container (adjusts width based on screen size)
+    main_column = ft.Column(
+        [],
+        width=600 if is_desktop else None,
+        expand=True,
+        alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+    )
+
     # input field for users to type in their task
     task_input = ft.TextField(label="Enter a task", expand=True)
 
@@ -275,15 +288,16 @@ def main(page: ft.Page):
     # wrap task list in fixed height container to prevent overflow
     task_list_container = ft.Container(
         content=task_list,
-        height=400,
         expand=True
     )
 
     # layout
-    page.add(
+    main_column.controls.extend([
         header,
         task_list_container, # expand task list to fill space
         ft.Row([task_input, add_button], alignment=ft.MainAxisAlignment.SPACE_BETWEEN) # input field and add task button aligned at bottom of screen
-    )
+    ])
+    
+    page.add(main_column)
 
 ft.app(target=main)
