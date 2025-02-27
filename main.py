@@ -17,7 +17,6 @@ SUPABASE_KEY = get_ssm_parameter("/flettaskmaster/supabase-key", with_decryption
 # initialize supabase client
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
-
 def main(page: ft.Page):
     page.title = "Flet Task Master"
     page.vertical_alignment = ft.MainAxisAlignment.SPACE_BETWEEN
@@ -36,34 +35,34 @@ def main(page: ft.Page):
     # defining the banner
     task_already_exists_warning = ft.Banner(
         bgcolor=ft.Colors.RED_400,
-        leading=ft.Icon(ft.Icons.WARNING, color=ft.colors.WHITE, size=15),
-        content=ft.Text("Task already exists!", color=ft.colors.WHITE),  # Content will be updated dynamically
+        leading=ft.Icon(ft.Icons.WARNING, color=ft.Colors.WHITE, size=15),
+        content=ft.Text("Task already exists!", color=ft.Colors.WHITE),  # Content will be updated dynamically
         actions=[
             ft.TextButton(text="Close",
                           on_click=lambda e: close_banner(task_already_exists_warning),
-                          style=ft.ButtonStyle(color=ft.colors.WHITE))
+                          style=ft.ButtonStyle(color=ft.Colors.WHITE))
         ],
     )
 
     empty_task_warning = ft.Banner(
         bgcolor=ft.Colors.RED_400,
-        leading=ft.Icon(ft.Icons.WARNING, color=ft.colors.WHITE, size=15),
-        content=ft.Text("Cannot add an empty task!", color=ft.colors.WHITE),  # Content will be updated dynamically
+        leading=ft.Icon(ft.Icons.WARNING, color=ft.Colors.WHITE, size=15),
+        content=ft.Text("Cannot add an empty task!", color=ft.Colors.WHITE),  # Content will be updated dynamically
         actions=[
             ft.TextButton(text="Close",
                           on_click=lambda e: close_banner(empty_task_warning),
-                          style=ft.ButtonStyle(color=ft.colors.WHITE))
+                          style=ft.ButtonStyle(color=ft.Colors.WHITE))
         ],
     )
 
     error_warning = ft.Banner(
         bgcolor=ft.Colors.RED_400,
-        leading=ft.Icon(ft.Icons.ERROR, color=ft.colors.WHITE, size=15),
-        content=ft.Text("An error occurred. Please try again later.", color=ft.colors.WHITE),  
+        leading=ft.Icon(ft.Icons.ERROR, color=ft.Colors.WHITE, size=15),
+        content=ft.Text("An error occurred. Please try again later.", color=ft.Colors.WHITE),  
         actions=[
             ft.TextButton(text="Close",
                         on_click=lambda e: close_banner(error_warning),
-                        style=ft.ButtonStyle(color=ft.colors.WHITE))
+                        style=ft.ButtonStyle(color=ft.Colors.WHITE))
         ],
     )
 
