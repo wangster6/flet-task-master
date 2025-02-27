@@ -42,11 +42,11 @@
 
 ### 5️⃣ Database Optimization
 
-✅ Prevented duplicate task entries (if user adds the same task multiple times).
+✅ Prevented duplicate task entries (if user adds the same task multiple times) by enforcing case-insensitive uniqueness.
 
 ✅ Implemented error handling to handle network issues or API failures.
 
-🔲 Optimized Database Queries for Performance (Indexing)
+✅ Optimized Database Queries for Performance (Indexing)
 
 ### 6️⃣ Deployment
 

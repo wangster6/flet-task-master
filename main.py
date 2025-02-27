@@ -1,18 +1,31 @@
 import flet as ft
 import threading
-import boto3
-import json
 from supabase import create_client, Client
 
-def get_ssm_parameter(name, with_decryption=True):
-    """Retrieve a parameter from AWS SSM Parameter Store."""
-    ssm = boto3.client('ssm', region_name="us-east-1")  # Change to your region
-    response = ssm.get_parameter(Name=name, WithDecryption=with_decryption)
-    return response['Parameter']['Value']
+# # IMPORTS FOR OFFICIAL DEPLOYMENT
+# import boto3
+# import json
 
-# Fetch secrets from AWS SSM Parameter Store
-SUPABASE_URL = get_ssm_parameter("/flettaskmaster/supabase-url", with_decryption=True)
-SUPABASE_KEY = get_ssm_parameter("/flettaskmaster/supabase-key", with_decryption=True)
+# IMPORTS FOR TESTING
+import os
+from dotenv import load_dotenv
+
+# # GET SUPABASE SECRETS FROM AWS SSM. USED IN OFFICIAL DEPLOYMENT
+# def get_ssm_parameter(name, with_decryption=True):
+#     """Retrieve a parameter from AWS SSM Parameter Store."""
+#     ssm = boto3.client('ssm', region_name="us-east-1")  # Change to your region
+#     response = ssm.get_parameter(Name=name, WithDecryption=with_decryption)
+#     return response['Parameter']['Value']
+
+# # fetch secrets from AWS SSM Parameter Store
+# SUPABASE_URL = get_ssm_parameter("/flettaskmaster/supabase-url", with_decryption=True)
+# SUPABASE_KEY = get_ssm_parameter("/flettaskmaster/supabase-key", with_decryption=True)
+
+# # GET SUPABASE SECRETS FROM ENV FILE. USED IN TESTING
+# load environment variables
+load_dotenv()
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
 # initialize supabase client
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
@@ -144,20 +157,9 @@ def main(page: ft.Page):
         task_text = task_input.value.strip() # get input text
         if not task_text:
             show_banner(empty_task_warning)
-            return # exit function if input is empty
-        
-        # check if task already exists in Supabase
-        try:
-            response = supabase.table("tasks").select("id").eq("text", task_text).execute()
-            if response.data:
-                show_banner(task_already_exists_warning)
-                return # exit function without adding duplicate task
-        except Exception as ex:
-            print("Error checking for existing task:", ex)
-            show_banner(error_warning)
-            return
+            return  # exit function if input is empty
 
-        if task_text: # check if text is not empty
+        try:
             response = supabase.table("tasks").insert({"text": task_text, "completed": False}).execute()
             task_id = response.data[0]["id"]
 
@@ -170,16 +172,15 @@ def main(page: ft.Page):
                 except Exception as ex:
                     print("Error deleting task:", ex)
                     show_banner(error_warning)
-                
+
             # wrap task label in text widget to allow wrapping
             task_label = ft.Text(task_text, no_wrap=False, expand=True)
 
             task_checkbox = ft.Checkbox(
                 on_change=lambda e, task_label=task_label, task_id=task_id: toggle_task(e, task_label=task_label, task_id=task_id),
                 data=task_id
-            ) # create checkbox for task
+            )
 
-            # organize elements into a row. align checkbox to the left and delete button to the right
             task_row = ft.Row(
                 [
                     task_checkbox,
@@ -192,14 +193,22 @@ def main(page: ft.Page):
             delete_button = ft.IconButton(
                 icon=ft.icons.DELETE,
                 on_click=lambda e, task_id=task_id, task_row=task_row: delete_task(e, task_id, task_row)
-            ) # create delete button for task
+            )
 
             task_row.controls.append(delete_button)
+            task_list.controls.append(task_row)
+            task_input.value = ""  # clear input field
+            page.update()  # refresh UI
 
-            task_list.controls.append(task_row) # add task to list
-            task_input.value = "" # clear input field
-            page.update() # refresh the page UI
+        except Exception as ex:
+            if "duplicate key value" in str(ex):  # catch unique constraint error
+                show_banner(task_already_exists_warning)
+            else:
+                print("Error adding task:", ex)
+                show_banner(error_warning)
+
     
+    ## APP MAIN FUNCTIONALITY IS STARTED
     load_tasks() #load tasks on app startup
 
     # button that triggers add_task function when clicked
