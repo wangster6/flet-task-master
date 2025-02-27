@@ -1,5 +1,6 @@
 import flet as ft
 import threading
+import time
 from supabase import create_client, Client
 
 # ==================================================================== #
@@ -49,6 +50,7 @@ def main(page: ft.Page):
     
     # check if accessing from desktop platform
     is_desktop = page.platform in [ft.PagePlatform.LINUX, ft.PagePlatform.WINDOWS, ft.PagePlatform.MACOS]
+    is_mobile = page.platform in [ft.PagePlatform.ANDROID, ft.PagePlatform.IOS]
     print("PAGE PLATFORM:", page.platform)
 
     # main app container (adjusts width based on screen size)
@@ -153,6 +155,12 @@ def main(page: ft.Page):
             text_field.visible = True # show input field
             text_field.value = task_label.value
             text_field.focus()
+            page.update()
+
+            if is_mobile:
+                time.sleep(0.1)
+                text_field.focus()
+            
             page.update()
 
         # function to cancel editing
