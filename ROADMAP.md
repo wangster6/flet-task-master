@@ -89,7 +89,9 @@
 
 ✅ Add bleach library to sanitize user inputs.
 
-🔲 Clean, organize, and restructure project codebase.
+✅ Clean, organize, and restructure project codebase.
+
+🔲 Separate code used for deployment on EC2 instance vs testing on local machine
 
 ---
 
