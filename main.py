@@ -165,7 +165,13 @@ def main(page: ft.Page):
         )
 
         # task label (default view mode)
-        task_label = ft.Text(task_text, no_wrap=False, expand=True)
+        task_label = ft.Text(
+            task_text,
+            no_wrap=False,
+            expand=True,
+            style=ft.TextStyle(decoration=ft.TextDecoration.LINE_THROUGH if task_is_completed else ft.TextDecoration.NONE),
+            color=ft.Colors.GREY_400 if task_is_completed else ft.Colors.BLACK
+        )
 
         # edit text field (hidden by default)
         text_field = ft.TextField(
@@ -316,10 +322,9 @@ def main(page: ft.Page):
 
         try:
             supabase.table("tasks").update({"completed": is_completed}).eq("id", task_id).execute()
-            task_label.style = ft.TextStyle(decoration=ft.TextDecoration.LINE_THROUGH) if is_completed else ft.TextStyle(decoration=ft.TextDecoration.NONE)
-            task_label.update() # refresh the checkbox UI
+            load_tasks()
         except Exception as ex:
-            print("Erorr updating task status")
+            print("Error updating task status:", ex)
             show_banner(error_warning)
 
     def load_tasks():
@@ -329,7 +334,7 @@ def main(page: ft.Page):
             response = supabase.table("tasks").select("*").execute()
             
             # sort tasks by priority before adding to UI
-            sorted_tasks = sorted(response.data, key=lambda t: t["priority"])
+            sorted_tasks = sorted(response.data, key=lambda t: (t["completed"], t["priority"]))
             
             for task in sorted_tasks:
                 task_id = task["id"]
