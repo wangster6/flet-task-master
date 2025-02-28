@@ -1,6 +1,6 @@
 import flet as ft
 import threading
-import time
+import bleach
 from supabase import create_client, Client
 
 # ==================================================================== #
@@ -185,6 +185,8 @@ def main(page: ft.Page):
         # function to update task text in database
         def on_save_edit(e):
             new_text = text_field.value.strip()
+            sanitize_input(new_text)
+
             new_priority = PRIORITY_MAPPING[priority_edit_dropdown.value]
             if not new_text:
                 show_banner(empty_task_warning)
@@ -350,6 +352,8 @@ def main(page: ft.Page):
     # function to add a task when button is clicked
     def add_task(e):
         task_text = task_input.value.strip() # get input text
+        sanitize_input(task_text)
+
         if not task_text:
             show_banner(empty_task_warning)
             return  # exit function if input is empty
@@ -404,5 +408,9 @@ def main(page: ft.Page):
         page.add(main_column)
     
     main_functionality()
+
+# sanitize user input using bleach to protect against attacks
+def sanitize_input(user_input):
+    return bleach.clean(user_input)
 
 ft.app(target=main)
