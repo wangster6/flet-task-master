@@ -65,10 +65,14 @@ def main(page: ft.Page):
     PRIORITY_MAPPING = {
         "high": 0,
         "med": 1,
-        "low": 2,
+        "low": 2
     }
     # PRIORITY_REVERSE_MAPPING = {v: k for k, v in PRIORITY_MAPPING.items()}
-    PRIORITY_REVERSE_MAPPING = {0: "high", 1: "med", 2: "low"}
+    PRIORITY_REVERSE_MAPPING = {
+        0: "high",
+        1: "med",
+        2: "low"
+    }
 
     # priority selection dropdown
     priority_dropdown = ft.Dropdown(
@@ -81,7 +85,7 @@ def main(page: ft.Page):
     # main app container (adjusts width based on screen size)
     main_column = ft.Column(
         [],
-        width=800 if is_desktop else None,
+        width=600 if is_desktop else None,
         expand=True,
         alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
     )
@@ -107,7 +111,7 @@ def main(page: ft.Page):
     empty_task_warning = ft.Banner(
         bgcolor=ft.Colors.RED_400,
         leading=ft.Icon(ft.Icons.WARNING, color=ft.Colors.WHITE, size=15),
-        content=ft.Text("Cannot add an empty task!", color=ft.Colors.WHITE),  # Content will be updated dynamically
+        content=ft.Text("Task cannot be empty!", color=ft.Colors.WHITE),  # Content will be updated dynamically
         actions=[
             ft.TextButton(text="Close",
                           on_click=lambda e: close_banner(empty_task_warning),
@@ -153,7 +157,7 @@ def main(page: ft.Page):
 
         priority_edit_dropdown = ft.Dropdown(
             options=[ft.dropdown.Option(p) for p in PRIORITY_OPTIONS],
-            value=task_priority,
+            value=PRIORITY_REVERSE_MAPPING[task_priority],
             width=70,
             label=str(PRIORITY_REVERSE_MAPPING[task_priority]),
             visible=False # hidden by default
