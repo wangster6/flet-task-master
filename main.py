@@ -81,7 +81,7 @@ def main(page: ft.Page):
     # main app container (adjusts width based on screen size)
     main_column = ft.Column(
         [],
-        width=600 if is_desktop else None,
+        width=800 if is_desktop else None,
         expand=True,
         alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
     )
@@ -148,7 +148,17 @@ def main(page: ft.Page):
             bgcolor=PRIORITY_COLORS.get(priority_text, ft.Colors.GREY),
             padding=ft.padding.all(5),
             border_radius=5,
+            visible=True
         )
+
+        priority_edit_dropdown = ft.Dropdown(
+            options=[ft.dropdown.Option(p) for p in PRIORITY_OPTIONS],
+            value=task_priority,
+            width=70 if is_desktop else None,
+            label=str(PRIORITY_REVERSE_MAPPING[task_priority]),
+            visible=False # hidden by default
+        )
+
         # task label (default view mode)
         task_label = ft.Text(task_text, no_wrap=False, expand=True)
 
@@ -162,63 +172,74 @@ def main(page: ft.Page):
         )
 
         # function to update task text in database
-        def update_task(e):
+        def on_save_edit(e):
             new_text = text_field.value.strip()
+            new_priority = PRIORITY_MAPPING[priority_edit_dropdown.value]
             if not new_text:
                 show_banner(empty_task_warning)
                 return
             
             try:
-                supabase.table("tasks").update({"text": new_text}).eq("id", task_id).execute()
+                supabase.table("tasks").update({"text": new_text, "priority": new_priority}).eq("id", task_id).execute()
                 task_label.value = new_text
+
+                # update priority
+                priority_text = PRIORITY_REVERSE_MAPPING[new_priority]
+                priority_label.content = ft.Text(priority_text, size=12, weight=ft.FontWeight.BOLD)
+                priority_label.bgcolor = PRIORITY_COLORS.get(priority_text, ft.Colors.GREY)
+                load_tasks()
+
+                # update UI
                 task_label.visible = True
                 text_field.visible = False # hide input after updating
                 save_button.visible = False
                 cancel_button.visible = False
                 edit_button.visible = True
                 delete_button.visible = True
+                priority_edit_dropdown.visible = False
+                priority_label.visible = True
                 page.update()
             except Exception as ex:
-                print("Error updating task")
+                print("Error updating task:", ex)
                 show_banner(error_warning)
 
-        def on_edit_click(e):
-            edit_task(e)
-            save_button.visible = True
-            cancel_button.visible = True
-            edit_button.visible = False
-            delete_button.visible = False
-            page.update()
-
         # function to toggle between viewing and editing mode
-        def edit_task(e):
+        def on_edit_click(e):
             task_label.visible = False # hide task label
             text_field.visible = True # show input field
             text_field.value = task_label.value
             text_field.focus()
+            save_button.visible = True
+            cancel_button.visible = True
+            edit_button.visible = False
+            delete_button.visible = False
+            priority_edit_dropdown.visible = True
+            priority_label.visible = False
             page.update()
 
         # function to cancel editing
-        def cancel_edit(e):
+        def on_cancel_edit(e):
             task_label.visible = True # show task label
             text_field.visible = False # hide input field
             save_button.visible = False
             cancel_button.visible = False
             edit_button.visible = True
             delete_button.visible = True
+            priority_edit_dropdown.visible = False
+            priority_label.visible = True
             page.update()
         
         # save button
         save_button = ft.IconButton(
             icon=ft.Icons.CHECK,
-            on_click=update_task,
+            on_click=on_save_edit,
             visible=False # initially hidden
         )
 
         # cancel button
         cancel_button = ft.IconButton(
             icon=ft.Icons.CLOSE,
-            on_click=cancel_edit,
+            on_click=on_cancel_edit,
             visible=False # initially hidden
         )
 
@@ -252,6 +273,7 @@ def main(page: ft.Page):
             [
                 task_checkbox,
                 priority_label,
+                priority_edit_dropdown,
                 task_label,
                 text_field,
                 edit_button,
@@ -295,7 +317,7 @@ def main(page: ft.Page):
                 task_list.controls.append(create_task_row(task_id, task_text, task_is_completed, task_priority))
             page.update()
         except Exception as ex:
-            print("Error loading tasks",)
+            print("Error loading tasks:", ex)
             show_banner(error_warning)
 
     # function to add a task when button is clicked
