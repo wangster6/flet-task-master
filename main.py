@@ -42,7 +42,6 @@ def main(page: ft.Page):
     page.title = "Flet Task Master"
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.window.width = 100
-    page.padding = ft.padding.all(25)
 
     # close any open banners on app startup
     page.banner = None
@@ -54,6 +53,7 @@ def main(page: ft.Page):
     print("User connected!")
     print("User platform:", page.platform)
     print("User IP:", page.client_ip)
+    page.padding = ft.padding.all(25) if is_desktop else None
 
     # priority options
     PRIORITY_OPTIONS = ["high", "med", "low"]
@@ -154,7 +154,7 @@ def main(page: ft.Page):
         priority_edit_dropdown = ft.Dropdown(
             options=[ft.dropdown.Option(p) for p in PRIORITY_OPTIONS],
             value=task_priority,
-            width=70 if is_desktop else None,
+            width=70,
             label=str(PRIORITY_REVERSE_MAPPING[task_priority]),
             visible=False # hidden by default
         )
@@ -190,6 +190,7 @@ def main(page: ft.Page):
                 load_tasks()
 
                 # update UI
+                task_checkbox.visible = True
                 task_label.visible = True
                 text_field.visible = False # hide input after updating
                 save_button.visible = False
@@ -205,6 +206,7 @@ def main(page: ft.Page):
 
         # function to toggle between viewing and editing mode
         def on_edit_click(e):
+            task_checkbox.visible = False
             task_label.visible = False # hide task label
             text_field.visible = True # show input field
             text_field.value = task_label.value
@@ -219,6 +221,7 @@ def main(page: ft.Page):
 
         # function to cancel editing
         def on_cancel_edit(e):
+            task_checkbox.visible = True
             task_label.visible = True # show task label
             text_field.visible = False # hide input field
             save_button.visible = False
@@ -266,7 +269,8 @@ def main(page: ft.Page):
         task_checkbox = ft.Checkbox(
             on_change=lambda e, task_label=task_label, task_id=task_id: toggle_task(e, task_label, task_id),
             value=bool(task_is_completed),
-            data=task_id
+            data=task_id,
+            visible=True
         )
 
         task_row = ft.Row(
