@@ -6,33 +6,33 @@ from supabase import create_client, Client
 # ==================================================================== #
 # FOR DEPLOYMENT
 
-# # IMPORTS
-# import boto3
-# import json
+# IMPORTS
+import boto3
+import json
 
-# # GET SUPABASE SECRETS FROM AWS SSM. USED IN OFFICIAL DEPLOYMENT
-# def get_ssm_parameter(name, with_decryption=True):
-#     """Retrieve a parameter from AWS SSM Parameter Store."""
-#     ssm = boto3.client('ssm', region_name="us-east-1")  # Change to your region
-#     response = ssm.get_parameter(Name=name, WithDecryption=with_decryption)
-#     return response['Parameter']['Value']
+# GET SUPABASE SECRETS FROM AWS SSM. USED IN OFFICIAL DEPLOYMENT
+def get_ssm_parameter(name, with_decryption=True):
+    """Retrieve a parameter from AWS SSM Parameter Store."""
+    ssm = boto3.client('ssm', region_name="us-east-1")  # Change to your region
+    response = ssm.get_parameter(Name=name, WithDecryption=with_decryption)
+    return response['Parameter']['Value']
 
-# # FETCH SECRETS FROM AWS SSM PARAMETER STORE
-# SUPABASE_URL = get_ssm_parameter("/flettaskmaster/supabase-url", with_decryption=True)
-# SUPABASE_KEY = get_ssm_parameter("/flettaskmaster/supabase-key", with_decryption=True)
+# FETCH SECRETS FROM AWS SSM PARAMETER STORE
+SUPABASE_URL = get_ssm_parameter("/flettaskmaster/supabase-url", with_decryption=True)
+SUPABASE_KEY = get_ssm_parameter("/flettaskmaster/supabase-key", with_decryption=True)
 # ==================================================================== #
 # FOR TESTING
 
-# IMPORTS FOR TESTING
-import os
-from dotenv import load_dotenv
+# # IMPORTS FOR TESTING
+# import os
+# from dotenv import load_dotenv
 
-# LOAD ENVIRONMENT VARIABLES
-load_dotenv()
+# # LOAD ENVIRONMENT VARIABLES
+# load_dotenv()
 
-# GET SUPABASE SECRETS FROM ENV FILE
-SUPABASE_URL = os.getenv("SUPABASE_URL")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+# # GET SUPABASE SECRETS FROM ENV FILE
+# SUPABASE_URL = os.getenv("SUPABASE_URL")
+# SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 # ==================================================================== #
 
 # initialize supabase client
@@ -53,6 +53,29 @@ def main(page: ft.Page):
     is_mobile = page.platform in [ft.PagePlatform.ANDROID, ft.PagePlatform.IOS]
     print("PAGE PLATFORM:", page.platform)
 
+    # priority options
+    PRIORITY_OPTIONS = ["high", "med", "low"]
+    PRIORITY_COLORS = {
+        "high": ft.Colors.RED_100,
+        "med": ft.Colors.AMBER_100,
+        "low": ft.Colors.GREEN_ACCENT_100,
+    }
+    PRIORITY_MAPPING = {
+        "high": 0,
+        "med": 1,
+        "low": 2,
+    }
+    # PRIORITY_REVERSE_MAPPING = {v: k for k, v in PRIORITY_MAPPING.items()}
+    PRIORITY_REVERSE_MAPPING = {0: "high", 1: "med", 2: "low"}
+
+    # priority selection dropdown
+    priority_dropdown = ft.Dropdown(
+        options=[ft.dropdown.Option(p) for p in PRIORITY_OPTIONS],
+        value="Low",
+        label="Priority",
+        expand=False,
+        width=100 if is_desktop else None,
+    )
     # main app container (adjusts width based on screen size)
     main_column = ft.Column(
         [],
@@ -113,7 +136,17 @@ def main(page: ft.Page):
         page.close(banner)
         page.update()
 
-    def create_task_row(task_id, task_text, task_is_completed):
+    def create_task_row(task_id, task_text, task_is_completed, task_priority):
+        # convert priority integer to readable text
+        priority_text = PRIORITY_REVERSE_MAPPING.get(task_priority, "low")
+
+        # create priority label
+        priority_label = ft.Container(
+            content=ft.Text(priority_text, size=12, weight=ft.FontWeight.BOLD),
+            bgcolor=PRIORITY_COLORS.get(priority_text, ft.Colors.GREY),
+            padding=ft.padding.all(5),
+            border_radius=5,
+        )
         # task label (default view mode)
         task_label = ft.Text(task_text, no_wrap=False, expand=True)
 
@@ -216,6 +249,7 @@ def main(page: ft.Page):
         task_row = ft.Row(
             [
                 task_checkbox,
+                priority_label,
                 task_label,
                 text_field,
                 edit_button,
@@ -244,13 +278,19 @@ def main(page: ft.Page):
 
     def load_tasks():
         task_list.controls.clear()
+        
         try:
             response = supabase.table("tasks").select("*").execute()
-            for task in response.data:
+            
+            # sort tasks by priority before adding to UI
+            sorted_tasks = sorted(response.data, key=lambda t: t["priority"])
+            
+            for task in sorted_tasks:
                 task_id = task["id"]
                 task_text = task["text"]
                 task_is_completed = task["completed"]
-                task_list.controls.append(create_task_row(task_id, task_text, task_is_completed))
+                task_priority = task["priority"]
+                task_list.controls.append(create_task_row(task_id, task_text, task_is_completed, task_priority))
             page.update()
         except Exception as ex:
             print("Error loading tasks",)
@@ -264,48 +304,59 @@ def main(page: ft.Page):
             return  # exit function if input is empty
 
         try:
-            response = supabase.table("tasks").insert({"text": task_text, "completed": False}).execute()
+            print(f"Priority selected: {priority_dropdown.value}")
+            task_priority = PRIORITY_MAPPING[priority_dropdown.value]
+            print(f"Priority number: {task_priority}")
+            response = supabase.table("tasks").insert({"text": task_text, "completed": False, "priority": task_priority}).execute()
             task_id = response.data[0]["id"]
 
-            task_list.controls.append(create_task_row(task_id, task_text, False))
+            print("TEST1")
+            task_list.controls.append(create_task_row(task_id, task_text, False, task_priority))
+            print("TEST2")
+            # sort task list after adding task
+            load_tasks()
+            print("TEST3")
             task_input.value = ""  # clear input field
             page.update()  # refresh UI
         except Exception as ex:
             if "duplicate key value" in str(ex):  # catch unique constraint error
                 show_banner(task_already_exists_warning)
             else:
-                print("Error adding task")
+                print("Error adding task:", ex)
                 show_banner(error_warning)
     
-    ## APP MAIN FUNCTIONALITY IS STARTED
-    load_tasks() # load tasks on app startup
+    def main_functionality():
+        ## APP MAIN FUNCTIONALITY IS STARTED
+        load_tasks() # load tasks on app startup
 
-    # button that triggers add_task function when clicked
-    add_button = ft.ElevatedButton("Add Task", on_click=add_task)
+        # button that triggers add_task function when clicked
+        add_button = ft.ElevatedButton("Add Task", on_click=add_task)
+        
+        ## CONTAINERS
+        # header centered at top of screen
+        header = ft.Container(
+            content=ft.Row(
+                [ft.Text("To Do", size=24, weight=ft.FontWeight.BOLD)],
+                alignment=ft.MainAxisAlignment.CENTER, # aligns header to center of screen
+            ),
+            padding=ft.padding.only(bottom=25) # added padding below header
+        )
+
+        # wrap task list in fixed height container to prevent overflow
+        task_list_container = ft.Container(
+            content=task_list,
+            expand=True
+        )
+
+        # layout
+        main_column.controls.extend([
+            header,
+            task_list_container, # expand task list to fill space
+            ft.Row([priority_dropdown, task_input, add_button], alignment=ft.MainAxisAlignment.SPACE_BETWEEN) # input field and add task button aligned at bottom of screen
+        ])
+        
+        page.add(main_column)
     
-    ## CONTAINERS
-    # header centered at top of screen
-    header = ft.Container(
-        content=ft.Row(
-            [ft.Text("To Do", size=24, weight=ft.FontWeight.BOLD)],
-            alignment=ft.MainAxisAlignment.CENTER, # aligns header to center of screen
-        ),
-        padding=ft.padding.only(bottom=25) # added padding below header
-    )
-
-    # wrap task list in fixed height container to prevent overflow
-    task_list_container = ft.Container(
-        content=task_list,
-        expand=True
-    )
-
-    # layout
-    main_column.controls.extend([
-        header,
-        task_list_container, # expand task list to fill space
-        ft.Row([task_input, add_button], alignment=ft.MainAxisAlignment.SPACE_BETWEEN) # input field and add task button aligned at bottom of screen
-    ])
-    
-    page.add(main_column)
+    main_functionality()
 
 ft.app(target=main)
