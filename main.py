@@ -51,7 +51,11 @@ def main(page: ft.Page):
     # check if accessing from desktop platform
     is_desktop = page.platform in [ft.PagePlatform.LINUX, ft.PagePlatform.WINDOWS, ft.PagePlatform.MACOS]
     is_mobile = page.platform in [ft.PagePlatform.ANDROID, ft.PagePlatform.IOS]
-    print("PAGE PLATFORM:", page.platform)
+    print(
+        f"User connected!\n
+        User platform: {page.platform}\n
+        User IP: {page.client_ip}"
+    )
 
     # priority options
     PRIORITY_OPTIONS = ["high", "med", "low"]
@@ -71,10 +75,10 @@ def main(page: ft.Page):
     # priority selection dropdown
     priority_dropdown = ft.Dropdown(
         options=[ft.dropdown.Option(p) for p in PRIORITY_OPTIONS],
-        value="Low",
+        value="low",
         label="Priority",
         expand=False,
-        width=100 if is_desktop else None,
+        width=100,
     )
     # main app container (adjusts width based on screen size)
     main_column = ft.Column(
@@ -304,18 +308,13 @@ def main(page: ft.Page):
             return  # exit function if input is empty
 
         try:
-            print(f"Priority selected: {priority_dropdown.value}")
             task_priority = PRIORITY_MAPPING[priority_dropdown.value]
-            print(f"Priority number: {task_priority}")
             response = supabase.table("tasks").insert({"text": task_text, "completed": False, "priority": task_priority}).execute()
             task_id = response.data[0]["id"]
 
-            print("TEST1")
             task_list.controls.append(create_task_row(task_id, task_text, False, task_priority))
-            print("TEST2")
             # sort task list after adding task
             load_tasks()
-            print("TEST3")
             task_input.value = ""  # clear input field
             page.update()  # refresh UI
         except Exception as ex:
@@ -330,7 +329,7 @@ def main(page: ft.Page):
         load_tasks() # load tasks on app startup
 
         # button that triggers add_task function when clicked
-        add_button = ft.ElevatedButton("Add Task", on_click=add_task)
+        add_button = ft.ElevatedButton("Add Task", on_click=add_task) if is_desktop else ft.IconButton(icon=ft.Icons.ADD_CIRCLE_ROUNDED, icon_size=55, on_click=add_task)
         
         ## CONTAINERS
         # header centered at top of screen
