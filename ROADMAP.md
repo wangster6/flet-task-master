@@ -68,7 +68,7 @@
 
 ### 7️⃣ UI Improvements & Features
 
-🔲 Add an "Edit Task" feature (allow users to modify existing tasks).
+✅ Add an "Edit Task" feature (allow users to modify existing tasks).
 
 🔲 Add categories or priorities (e.g., high/medium/low priority).
 
