@@ -42,6 +42,7 @@ def main(page: ft.Page):
     page.title = "Flet Task Master"
     page.horizontal_alignment = ft.CrossAxisAlignment.CENTER
     page.window.width = 100
+    page.bgcolor = ft.Colors.GREY_50
 
     # close any open banners on app startup
     page.banner = None
@@ -277,20 +278,33 @@ def main(page: ft.Page):
             visible=True
         )
 
-        task_row = ft.Row(
-            [
-                task_checkbox,
-                priority_label,
-                priority_edit_dropdown,
-                task_label,
-                text_field,
-                edit_button,
-                save_button,
-                cancel_button,
-                delete_button
-            ],
-            alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-            expand=True
+        # Function to handle hover events
+        def on_hover(e):
+            if e.data == "true":  # Mouse entered
+                task_row.bgcolor = ft.Colors.GREY_200  # Change to a subtle highlight
+            else:  # Mouse left
+                task_row.bgcolor = None  # Reset to default
+            task_row.update()
+
+        task_row = ft.Container(
+            ft.Row(
+                [
+                    task_checkbox,
+                    priority_label,
+                    priority_edit_dropdown,
+                    task_label,
+                    text_field,
+                    edit_button,
+                    save_button,
+                    cancel_button,
+                    delete_button
+                ],
+                alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+                expand=True
+            ),
+            padding=ft.padding.all(3),  # Add padding around row for better spacing
+            border_radius=ft.border_radius.all(5),  # Rounded corners
+            on_hover=on_hover
         )
 
         return task_row
