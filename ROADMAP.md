@@ -84,5 +84,12 @@
 
 🔲 Record a demo video for portfolio.
 
+
+### 9️⃣ Additional Changes & Updates
+
+✅ Add bleach library to sanitize user inputs.
+
+🔲 Clean, organize, and restructure project codebase.
+
 ---
 
