@@ -78,7 +78,7 @@
 
 ### 8️⃣ Final Testing & Documentation
 
-🔲 Thoroughly test all features before deployment.
+✅ Thoroughly test all features before deployment.
 
 ✅ Write clear documentation for setting up the project.
 
