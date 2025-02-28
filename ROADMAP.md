@@ -74,13 +74,13 @@
 
 ✅ Allow users to edit the priority of tasks.
 
-🔲 Improve visual styling to make the app more appealing.
+✅ Improve visual styling to make the app more appealing.
 
 ### 8️⃣ Final Testing & Documentation
 
 🔲 Thoroughly test all features before deployment.
 
-🔲 Write clear documentation for setting up the project.
+✅ Write clear documentation for setting up the project.
 
 🔲 Record a demo video for portfolio.
 
