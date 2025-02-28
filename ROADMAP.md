@@ -72,7 +72,7 @@
 
 ✅ Add priorities attribute for tasks (high/medium/low priority).
 
-🔲 Add priorities to edit feature to allow users to change the priority of tasks.
+✅ Allow users to edit the priority of tasks.
 
 🔲 Improve visual styling to make the app more appealing.
 
