@@ -51,11 +51,9 @@ def main(page: ft.Page):
     # check if accessing from desktop platform
     is_desktop = page.platform in [ft.PagePlatform.LINUX, ft.PagePlatform.WINDOWS, ft.PagePlatform.MACOS]
     is_mobile = page.platform in [ft.PagePlatform.ANDROID, ft.PagePlatform.IOS]
-    print(
-        f"User connected!\n
-        User platform: {page.platform}\n
-        User IP: {page.client_ip}"
-    )
+    print("User connected!")
+    print("User platform:", page.platform)
+    print("User IP:", page.client_ip)
 
     # priority options
     PRIORITY_OPTIONS = ["high", "med", "low"]
