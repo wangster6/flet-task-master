@@ -93,5 +93,13 @@
 
 🔲 Separate code used for deployment on EC2 instance vs testing on local machine
 
+🔲 Enable Row-Level Security (RLS) for Supabase.
+
+🔲 Create RLS policies to restrict users to only their own tasks.
+
+🔲 Modify code to include user_id when inserting tasks.
+
+🔲 Test security settings to ensure unauthorized access is prevented.
+
 ---
 
